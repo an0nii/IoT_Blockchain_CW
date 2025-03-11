@@ -4,6 +4,7 @@ import AddDevice from '../views/AddDevice.vue'
 import DeviceDetails from '../views/DeviceDetails.vue'
 import ProductList from '../views/ProductList.vue'
 import ProductDetails from '../views/ProductDetails.vue'
+import GenerateQRCode from '@/views/GenerateQRCode.vue'
 
 const routes = [
   {
@@ -32,6 +33,11 @@ const routes = [
     name: 'ProductDetails',
     component: ProductDetails,
     props: true
+  },
+  {
+    path: '/generate-qr',
+    name: 'GenerateQRCode',
+    component: GenerateQRCode
   }
 ]
 
