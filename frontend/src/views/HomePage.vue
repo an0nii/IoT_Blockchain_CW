@@ -1,12 +1,20 @@
+//// filepath: /Users/antonbarabulya/IoT_Blockchain_CW/frontend/src/views/HomePage.vue
 <template>
   <div class="max-w-4xl mx-auto mt-8 p-6 bg-white rounded shadow">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-semibold">Devices list</h2>
-      <router-link to="/generate-qr">
-        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-          Generate QR Code For Product
-        </button>
-      </router-link>
+      <div class="flex space-x-2">
+        <router-link to="/generate-qr">
+          <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Generate QR Code For Product
+          </button>
+        </router-link>
+        <router-link to="/connect-wallet">
+          <button class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">
+            Connect Wallet
+          </button>
+        </router-link>
+      </div>
     </div>
     <table class="min-w-full bg-white">
       <thead>

@@ -3,6 +3,7 @@ from flask_cors import CORS
 import pyqrcode
 import io
 import base64
+import zlib
 
 app = Flask(__name__)
 CORS(app)
@@ -13,8 +14,11 @@ def generate_qr():
         data = request.json.get('data', '')
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-        qr = pyqrcode.create(data)
         
+        dataCompressZlib = zlib.compress(data.encode('utf-8'))
+        QRdata = base64.b64encode(dataCompressZlib)
+        
+        qr = pyqrcode.create(QRdata)
         buffer = io.BytesIO()
         qr.png(buffer, scale=6)
         buffer.seek(0)

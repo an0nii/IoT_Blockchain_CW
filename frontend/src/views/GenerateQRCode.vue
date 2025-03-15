@@ -3,32 +3,32 @@
     <h2 class="text-2xl font-semibold mb-4">Generate Product QR Code</h2>
     <form @submit.prevent="handleGenerate">
       <div class="mb-4">
-        <label class="block text-gray-700">Product ID</label>
+        <label class="block text-gray-700">Sender Address</label>
         <input
           type="text"
-          v-model="productId"
+          v-model="senderAddress"
           class="w-full px-3 py-2 border rounded"
-          placeholder="Enter product ID"
+          placeholder="Enter sender address"
           required
         />
       </div>
       <div class="mb-4">
-        <label class="block text-gray-700">Sender</label>
+        <label class="block text-gray-700">Reciver Address</label>
         <input
           type="text"
-          v-model="sender"
+          v-model="reciverAddress"
           class="w-full px-3 py-2 border rounded"
-          placeholder="Enter sender location"
+          placeholder="Enter reciver address"
           required
         />
       </div>
       <div class="mb-4">
-        <label class="block text-gray-700">Destination</label>
+        <label class="block text-gray-700">Host Address</label>
         <input
           type="text"
-          v-model="destination"
+          v-model="hostAddress"
           class="w-full px-3 py-2 border rounded"
-          placeholder="Enter destination location"
+          placeholder="Enter host address"
           required
         />
       </div>
@@ -69,19 +69,28 @@ export default {
   name: 'GenerateQRCode',
   data() {
     return {
-      productId: '',
-      sender: '',
-      destination: '',
-//    description: '',
+      senderAddress: '',
+      reciverAddress: '',
+      hostAddress: '',
       qrCodeUrl: ''
     }
   },
   methods: {
+    getNextId() {
+      let lastId = localStorage.getItem('lastId')
+      if (!lastId) {
+        lastId = 0
+      }
+      const nextId = parseInt(lastId) + 1
+      localStorage.setItem('lastId', nextId)
+      return nextId
+    },
     async handleGenerate() {
       try {
-        const typedData = `${this.productId}||${this.sender}||${this.destination}||false||false`
+        const productId = this.getNextId()
+        const typedData = `${productId}||${this.senderAddress}||${this.reciverAddress}||${this.hostAddress}`
         const response = await axios.post('http://localhost:3000/api/generate_qr', { data: typedData })
-        this.qrCodeUrl = response.data.qrCode
+        this.qrCodtUrl = response.data.qrCode
       } catch (error) {
         console.error('QR Code generation failed:', error)
       }
@@ -91,5 +100,4 @@ export default {
 </script>
 
 <style scoped>
-/* Дополнительные стили при необходимости */
 </style>
