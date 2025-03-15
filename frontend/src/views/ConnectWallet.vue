@@ -22,6 +22,7 @@ export default {
   methods: {
     handleConnected(address) {
       this.walletAddress = address;
+      localStorage.setItem("walletAddress", address);
       console.log("Wallet connected:", address);
     },
   },

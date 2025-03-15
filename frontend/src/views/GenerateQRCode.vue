@@ -60,11 +60,21 @@
         Download QR Code
       </a>
     </div>
+    <div v-if="walletAddress" class="mt-6">
+      <p class="text-lg">Using wallet: {{ walletAddress }}</p>
+      <button
+        @click="sendToContract"
+        class="mt-4 inline-block bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
+      >
+        Send to Contract
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import { ethers, BrowserProvider } from 'ethers'
 export default {
   name: 'GenerateQRCode',
   data() {
@@ -72,7 +82,15 @@ export default {
       senderAddress: '',
       reciverAddress: '',
       hostAddress: '',
-      qrCodeUrl: ''
+      qrCodeUrl: '',
+      walletAddress: '',
+      currentProductId: null
+    }
+  },
+  created() {
+    const storedWallet = localStorage.getItem("walletAddress")
+    if (storedWallet) {
+      this.walletAddress = storedWallet
     }
   },
   methods: {
@@ -81,21 +99,39 @@ export default {
       if (!lastId) {
         lastId = 0
       }
-      const nextId = parseInt(lastId) + 1
+      const nextId = parseInt(lastId, 10) + 1
       localStorage.setItem('lastId', nextId)
       return nextId
     },
     async handleGenerate() {
       try {
         const productId = this.getNextId()
+        this.currentProductId = productId
         const typedData = `${productId}||${this.senderAddress}||${this.reciverAddress}||${this.hostAddress}`
         const response = await axios.post('http://localhost:3000/api/generate_qr', { data: typedData })
-        this.qrCodtUrl = response.data.qrCode
+        this.qrCodeUrl = response.data.qrCode
       } catch (error) {
         console.error('QR Code generation failed:', error)
       }
     },
-  },
+    async sendToContract() {
+      try {
+        const provider = new BrowserProvider(window.ethereum)
+        const signer = await provider.getSigner()
+        const contractAddress = "input address of your contract"
+        const contractABI = ["input ABI of your contract"]
+        const contract = new ethers.Contract(contractAddress, contractABI, signer)
+        const productId = this.currentProductId
+        const typedData = `${productId}||${this.senderAddress}||${this.reciverAddress}||${this.hostAddress}`
+        const tx = await contract.storeProductData(typedData)
+        console.log("Transaction hash:", tx.hash)
+        await tx.wait()
+        console.log("Transaction confirmed")
+      } catch (error) {
+        console.error("Transaction failed:", error)
+      }
+    }
+  }
 }
 </script>
 
