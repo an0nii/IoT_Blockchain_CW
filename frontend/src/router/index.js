@@ -5,8 +5,6 @@ import DeviceDetails from '../views/DeviceDetails.vue'
 import ProductList from '../views/ProductList.vue'
 import ProductDetails from '../views/ProductDetails.vue'
 import GenerateQRCode from '@/views/GenerateQRCode.vue'
-import ConnectWalletPage from '../views/ConnectWallet.vue'
-
 
 const routes = [
   {
@@ -41,11 +39,6 @@ const routes = [
     name: 'GenerateQRCode',
     component: GenerateQRCode
   },
-  {
-    path: '/connect-wallet',
-    name: 'ConnectWallet',
-    component: ConnectWalletPage
-  }
 ]
 
 const router = createRouter({

@@ -1,36 +1,32 @@
-//// filepath: /Users/antonbarabulya/IoT_Blockchain_CW/frontend/src/views/HomePage.vue
 <template>
   <div class="max-w-4xl mx-auto mt-8 p-6 bg-white rounded shadow">
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-semibold">Devices list</h2>
-      <div class="flex space-x-2">
-        <router-link to="/generate-qr">
-          <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            Generate QR Code For Product
-          </button>
-        </router-link>
-        <router-link to="/connect-wallet">
-          <button class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">
-            Connect Wallet
-          </button>
-        </router-link>
-      </div>
+      <router-link to="/generate-qr">
+        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+          Generate QR Code For Product
+        </button>
+      </router-link>
+      <button @click="connectWallet" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">
+        <span v-if="walletAddress">Connected</span>
+        <span v-else>Connect Wallet</span>
+      </button>
     </div>
-    <table class="min-w-full bg-white">
+    <div v-if="walletAddress" class="mb-4">
+      <p class="text-lg text-green-600">Wallet connected: {{ walletAddress }}</p>
+    </div>
+    <table class="min-w-full bg-white table-fixed">
       <thead>
         <tr>
-          <th class="py-2 px-4 border-b">Name</th>
-          <th class="py-2 px-4 border-b">Type</th>
-          <th class="py-2 px-4 border-b">Description</th>
-          <th class="py-2 px-4 border-b">Details</th>
+          <th class="w-1/3 py-2 px-4 border text-center">Name</th>
+          <th class="w-1/3 py-2 px-4 border text-center">Type</th>
+          <th class="w-1/3 py-2 px-4 border text-center">Details</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(device, index) in devices" :key="index">
-          <td class="py-2 px-4 border-b">{{ device.name }}</td>
-          <td class="py-2 px-4 border-b">{{ device.type }}</td>
-          <td class="py-2 px-4 border-b">{{ device.description }}</td>
-          <td class="py-2 px-4 border-b">
+        <tr v-for="device in devices" :key="device.id">
+          <td class="w-1/3 py-2 px-4 border text-center">{{ device.name }}</td>
+          <td class="w-1/3 py-2 px-4 border text-center">{{ device.type }}</td>
+          <td class="w-1/3 py-2 px-4 border text-center">
             <router-link :to="`/device/${device.id}`">
               <button class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
                 View
@@ -43,19 +39,58 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'HomePage',
-  data() {
-    return {
-      devices: [
-        { id: 1, name: 'IoTSender1', type: 'Sender', description: 'Device in Moscow' },
-        { id: 2, name: 'IoTReceiver1', type: 'Recipient', description: 'Device in Minsk' },
-      ],
-    }
-  },
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useMetaMaskWallet } from "vue-connect-wallet"
+import "vue-connect-wallet/dist/style.css"
+
+const walletAddress = ref("")
+const wallet = useMetaMaskWallet()
+
+const connectWallet = async () => {
+  const result = await wallet.connect()
+  if (Array.isArray(result)) {
+    walletAddress.value = result[0]
+    localStorage.setItem("walletAddress", result[0])
+    console.log("Wallet connected:", result[0])
+  } else {
+    console.error("Error connecting wallet:", result)
+  }
 }
+
+wallet.onAccountsChanged((accounts) => {
+  if (accounts && accounts.length > 0) {
+    walletAddress.value = accounts[0]
+    localStorage.setItem("walletAddress", accounts[0])
+    console.log("Wallet account changed:", accounts[0])
+  } else {
+    walletAddress.value = ""
+    localStorage.removeItem("walletAddress")
+  }
+})
+
+const devices = ref([])
+
+onMounted(() => {
+  const storedWallet = localStorage.getItem("walletAddress")
+  if (storedWallet) {
+    walletAddress.value = storedWallet
+  }
+  const storedDevices = localStorage.getItem("devices")
+  if (storedDevices) {
+    devices.value = JSON.parse(storedDevices)
+  }
+})
 </script>
 
 <style scoped>
+table {
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  text-align: center;
+}
 </style>

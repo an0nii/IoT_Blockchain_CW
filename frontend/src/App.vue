@@ -1,11 +1,11 @@
 <template>
   <div>
     <header class="bg-green-500 p-4 flex justify-between items-center">
-      <h1 class="text-white text-lg">Supply chain control panel</h1>
+      <h1 class="text-white text-lg">Supply Chain Control Panel</h1>
       
       <div class="flex space-x-4">
         <router-link to="/add-device" v-if="showAddButton">
-          <button class="bg-white text-green-500 px-4 py-2 rounded">Add device</button>
+          <button class="bg-white text-green-500 px-4 py-2 rounded">Add Device</button>
         </router-link>
         
         <router-link to="/products" v-if="showProductsButton">

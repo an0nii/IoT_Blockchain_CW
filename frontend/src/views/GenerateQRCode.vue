@@ -13,22 +13,12 @@
         />
       </div>
       <div class="mb-4">
-        <label class="block text-gray-700">Reciver Address</label>
+        <label class="block text-gray-700">Receiver Address</label>
         <input
           type="text"
           v-model="reciverAddress"
           class="w-full px-3 py-2 border rounded"
-          placeholder="Enter reciver address"
-          required
-        />
-      </div>
-      <div class="mb-4">
-        <label class="block text-gray-700">Host Address</label>
-        <input
-          type="text"
-          v-model="hostAddress"
-          class="w-full px-3 py-2 border rounded"
-          placeholder="Enter host address"
+          placeholder="Enter receiver address"
           required
         />
       </div>
@@ -44,7 +34,7 @@
             type="button"
             class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
           >
-            Back
+          Home Page
           </button>
         </router-link>
       </div>
@@ -61,13 +51,16 @@
       </a>
     </div>
     <div v-if="walletAddress" class="mt-6">
-      <p class="text-lg">Using wallet: {{ walletAddress }}</p>
+      <p class="text-lg">Using Wallet: {{ walletAddress }}</p>
       <button
         @click="sendToContract"
         class="mt-4 inline-block bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
       >
-        Send to Contract
+        Send To Contract
       </button>
+    </div>
+    <div v-if="contractError" class="mt-4 p-2 bg-red-200 text-red-800 rounded">
+      {{ contractError }}
     </div>
   </div>
 </template>
@@ -75,16 +68,18 @@
 <script>
 import axios from 'axios'
 import { ethers, BrowserProvider } from 'ethers'
+import IOTContractMonitoring from '../../IOTContractMonitoring.json'
 export default {
   name: 'GenerateQRCode',
   data() {
     return {
       senderAddress: '',
       reciverAddress: '',
-      hostAddress: '',
       qrCodeUrl: '',
       walletAddress: '',
-      currentProductId: null
+      currentProductId: null,
+      pendingProductId: null,
+      contractError: ''
     }
   },
   created() {
@@ -92,22 +87,26 @@ export default {
     if (storedWallet) {
       this.walletAddress = storedWallet
     }
+    if (!localStorage.getItem("currentId")) {
+      localStorage.setItem("currentId", 1)
+    }
   },
   methods: {
-    getNextId() {
-      let lastId = localStorage.getItem('lastId')
-      if (!lastId) {
-        lastId = 0
-      }
-      const nextId = parseInt(lastId, 10) + 1
-      localStorage.setItem('lastId', nextId)
-      return nextId
+    getCurrentId() {
+      let currentId = localStorage.getItem("currentId")
+      return parseInt(currentId, 10)
+    },
+    incrementCurrentId() {
+      let currentId = this.getCurrentId()
+      currentId++
+      localStorage.setItem("currentId", currentId)
+      return currentId
     },
     async handleGenerate() {
       try {
-        const productId = this.getNextId()
-        this.currentProductId = productId
-        const typedData = `${productId}||${this.senderAddress}||${this.reciverAddress}||${this.hostAddress}`
+        const productId = this.getCurrentId()
+        this.pendingProductId = productId
+        const typedData = `${productId}||${this.senderAddress}||${this.reciverAddress}`
         const response = await axios.post('http://localhost:3000/api/generate_qr', { data: typedData })
         this.qrCodeUrl = response.data.qrCode
       } catch (error) {
@@ -116,19 +115,33 @@ export default {
     },
     async sendToContract() {
       try {
+        if (!window.ethereum) {
+          throw new Error('MetaMask not installed')
+        }
+        this.contractError = ''
+        console.log("Sending transaction with parameters:", {
+          productId: this.pendingProductId,
+          sender: this.senderAddress,
+          receiver: this.reciverAddress
+        })
         const provider = new BrowserProvider(window.ethereum)
         const signer = await provider.getSigner()
-        const contractAddress = "input address of your contract"
-        const contractABI = ["input ABI of your contract"]
+        const contractAddress = IOTContractMonitoring.address
+        const contractABI = IOTContractMonitoring.abi
         const contract = new ethers.Contract(contractAddress, contractABI, signer)
-        const productId = this.currentProductId
-        const typedData = `${productId}||${this.senderAddress}||${this.reciverAddress}||${this.hostAddress}`
-        const tx = await contract.storeProductData(typedData)
+        const tx = await contract.createLabel(this.pendingProductId, this.senderAddress, this.reciverAddress)
         console.log("Transaction hash:", tx.hash)
         await tx.wait()
         console.log("Transaction confirmed")
+        this.currentProductId = this.pendingProductId
+        this.incrementCurrentId()
       } catch (error) {
         console.error("Transaction failed:", error)
+        if (error.message.includes("Sender not authorized")) {
+          this.contractError = "Transaction failed: sender is not authorized to perform this operation."
+        } else {
+          this.contractError = error.message
+        }
       }
     }
   }
