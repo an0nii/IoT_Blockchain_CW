@@ -82,7 +82,9 @@ export default {
               id: labelData.id.toString(),
               sent: labelData.sent,
               received: labelData.received,
-              voided: labelData.voided
+              voided: labelData.voided,
+              sender: labelData.sender,
+              receiver: labelData.receiver
             })
           } catch (err) {
             console.error("Failed to fetch label with id", i, err)
