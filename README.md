@@ -34,7 +34,7 @@
 
 1. Перейдите в директорию `frontend`:
    ```bash
-   cd /Users/antonbarabulya/IoT_Blockchain_CW/frontend
+   cd .../IoT_Blockchain_CW/frontend
    ```
 2. Установите npm-зависимости:
    ```bash
