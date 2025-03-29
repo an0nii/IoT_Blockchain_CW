@@ -8,11 +8,6 @@
         </button>
       </router-link>
     </div>
-    <div class="mb-4">
-      <button @click="fetchProducts" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-        Refresh Products
-      </button>
-    </div>
     <div v-if="error" class="mb-4 p-2 bg-red-200 text-red-800 rounded">
       {{ error }}
     </div>
@@ -60,7 +55,8 @@ export default {
     return {
       products: [],
       loading: false,
-      error: ''
+      error: '',
+      intervalId: null
     }
   },
   methods: {
@@ -100,18 +96,24 @@ export default {
     }
   },
   mounted() {
+    this.fetchProducts()
+    this.intervalId = setInterval(() => {
+      this.fetchProducts()
+    }, 5000)
     const cached = sessionStorage.getItem("cachedProducts")
     if (cached) {
       this.products = JSON.parse(cached)
     }
   },
   beforeUnmount() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId)
+    }
   }
 }
 </script>
 
 <style scoped>
-
 table {
   table-layout: fixed;
   border-collapse: collapse;
