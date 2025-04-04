@@ -41,6 +41,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import axios from 'axios'
 import { useMetaMaskWallet } from "vue-connect-wallet"
 import "vue-connect-wallet/dist/style.css"
 
@@ -71,15 +72,37 @@ wallet.onAccountsChanged((accounts) => {
 
 const devices = ref([])
 
-onMounted(() => {
+const fetchDevices = async () => {
+  try {
+    const res = await axios.get('http://localhost:3000/api/devices')
+    devices.value = res.data.devices
+  } catch (e) {
+    console.error("Error fetching devices: ", e)
+  }
+}
+
+const syncDevices = async () => {
+  try {
+    const storedDevices = localStorage.getItem("devices")
+    if (storedDevices) {
+      const localDevices = JSON.parse(storedDevices)
+      for (const device of localDevices) {
+        await axios.post('http://localhost:3000/api/devices', device)
+      }
+      localStorage.removeItem("devices")
+    }
+  } catch (e) {
+    console.error("Error syncing devices: ", e)
+  }
+}
+
+onMounted(async () => {
   const storedWallet = localStorage.getItem("walletAddress")
   if (storedWallet) {
     walletAddress.value = storedWallet
   }
-  const storedDevices = localStorage.getItem("devices")
-  if (storedDevices) {
-    devices.value = JSON.parse(storedDevices)
-  }
+  await syncDevices()
+  await fetchDevices()
 })
 </script>
 

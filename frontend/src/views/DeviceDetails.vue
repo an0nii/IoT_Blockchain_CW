@@ -47,7 +47,6 @@
           </table>
         </div>
       </div>
-
     </div>
     <div v-else class="text-gray-600">
       Device not found.
@@ -64,6 +63,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   name: "DeviceDetails",
   props: ['id'],
@@ -76,40 +76,42 @@ export default {
       errorProducts: ''
     }
   },
-  created() {
+  async created() {
     try {
-      const devices = JSON.parse(localStorage.getItem('devices') || '[]');
-      this.device = devices.find(d => String(d.id) === String(this.id));
+      const res = await axios.get('http://localhost:3000/api/devices')
+      const devices = res.data.devices
+      this.device = devices.find(d => String(d.id) === String(this.id))
       if (!this.device) {
-        this.error = "Device not found.";
+        this.error = "Device not found."
       } else {
-        this.fetchRelatedProducts();
+        this.fetchRelatedProducts()
       }
     } catch (e) {
-      this.error = e.message || "Error loading device details.";
+      this.error = e.message || "Error loading device details."
     }
   },
   methods: {
-  fetchRelatedProducts() {
-    this.loadingProducts = true;
-    try {
-      let products = [];
-      if (sessionStorage.getItem("cachedProducts")) {
-        products = JSON.parse(sessionStorage.getItem("cachedProducts"));
+    fetchRelatedProducts() {
+      this.loadingProducts = true;
+      try {
+        let products = []
+        const storedProducts = localStorage.getItem("cachedProducts")
+        if (storedProducts) {
+          products = JSON.parse(storedProducts)
+        }
+        const deviceAddress = this.device.address.trim().toLowerCase();
+        this.relatedProducts = products.filter(product => {
+          const sender = product.sender.trim().toLowerCase();
+          const receiver = product.receiver.trim().toLowerCase();
+          return sender === deviceAddress || receiver === deviceAddress;
+        })
+      } catch (e) {
+        this.errorProducts = e.message || "Failed to load related products."
+      } finally {
+        this.loadingProducts = false;
       }
-      const deviceAddress = this.device.address.trim().toLowerCase();
-      this.relatedProducts = products.filter(product => {
-        const sender = product.sender.trim().toLowerCase();
-        const receiver = product.receiver.trim().toLowerCase();
-        return sender === deviceAddress || receiver === deviceAddress;
-      });
-    } catch (e) {
-      this.errorProducts = e.message || "Failed to load related products.";
-    } finally {
-      this.loadingProducts = false;
     }
   }
-}
 }
 </script>
 
