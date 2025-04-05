@@ -95,7 +95,7 @@ export default {
       this.loadingProducts = true;
       try {
         let products = []
-        const storedProducts = localStorage.getItem("cachedProducts")
+        const storedProducts = sessionStorage.getItem("cachedProducts")
         if (storedProducts) {
           products = JSON.parse(storedProducts)
         }
