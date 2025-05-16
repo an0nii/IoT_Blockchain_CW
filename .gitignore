@@ -1,0 +1,9 @@
+# Blockchain project dependencies and output
+blockchain/artifacts/
+blockchain/cache/
+blockchain/node_modules/
+
+# env
+blockchain/.env
+
+.DS_Store
